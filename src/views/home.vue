@@ -18,15 +18,16 @@
           </template>
           信息录入
         </a-menu-item>
-        <a-menu-item key="app">
+        <!-- <a-menu-item key="app">
           <template #icon>
             <appstore-outlined />
           </template>
           信息查询
-        </a-menu-item>
+        </a-menu-item> -->
       </a-menu>
       <div class="dashboard">
         <div class="card-title">{{ title }}</div>
+        <a-button @click="exportExcel" type="primary">导出</a-button>
         <a-table :columns="columns" :data-source="dataSource" bordered>
           <template #bodyCell="{ column, text, record }">
             <template v-if="['name', 'phone', 'age', 'vip', 'money'].includes(column.dataIndex)">
@@ -87,6 +88,8 @@
 import { defineComponent, ref, reactive } from "vue";
 import { MailOutlined, QqOutlined, AppstoreOutlined, SearchOutlined } from "@ant-design/icons-vue";
 import { cloneDeep } from "lodash-es";
+import json2Excel from "@/utils/json2Excel";
+
 // menu
 const selectedKeys1 = ref(["enter"]);
 const title = ref("");
@@ -118,16 +121,16 @@ const columns = [
   {
     title: "姓名",
     dataIndex: "name",
-    width: "10%",
+    width: "15%",
   },
   {
     title: "电话号码",
     dataIndex: "phone",
-    width: "15%",
+    width: "25%",
     customFilterDropdown: true,
-    onFilter: (value, record) =>{
+    onFilter: (value, record) => {
       // console.log(value,record.phone);
-      return record.phone.toString().toLowerCase().includes(value.toLowerCase())//筛选phone
+      return record.phone.toString().toLowerCase().includes(value.toLowerCase()); //筛选phone
     },
     onFilterDropdownVisibleChange: (visible) => {
       if (visible) {
@@ -151,18 +154,26 @@ const columns = [
   {
     title: "余额",
     dataIndex: "money",
-    width: "10%",
+    width: "15%",
   },
 
   {
     title: "编辑",
     dataIndex: "operation",
   },
-  {
-    title: "删除",
-    dataIndex: "delete",
-  },
+  // {
+  //   title: "删除",
+  //   dataIndex: "delete",
+  // },
 ];
+const excelKeyToName = {
+  key:'序号',
+  name: "姓名",
+  phone: "电话",
+  age: "年龄",
+  vip: "会员",
+  money: "余额",
+};
 const data = [];
 for (let i = 0; i < 100; i++) {
   data.push({
@@ -172,7 +183,6 @@ for (let i = 0; i < 100; i++) {
     age: 32,
     money: 1222,
     vip: `否 ${i}`,
-
   });
 }
 // 编辑
@@ -195,7 +205,6 @@ const handleSearch = (selectedKeys, confirm, dataIndex) => {
   state.searchText = selectedKeys[0];
   state.searchedColumn = dataIndex;
   confirm();
-
 };
 const handleReset = (clearFilters) => {
   clearFilters({
@@ -203,6 +212,25 @@ const handleReset = (clearFilters) => {
   });
   state.searchText = "";
 };
+
+/**
+ * 导出
+ */
+const exportExcel = () => {
+  console.log(dataSource.value);
+  // 格式化参数
+  const data = dataSource.value.map((item) => {
+    const newItem = {};
+    Object.keys(item).forEach(key => {
+      newItem[excelKeyToName[key]] = item[key];
+    });
+    return newItem;
+  });
+ 
+  // 导出 Excel
+  json2Excel(data);
+};
+
 </script>
 <style lang="less">
 .home {
